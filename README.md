@@ -1,2 +1,2 @@
 # Scalable-URL-shortener
-URL shortener with analytics and expiration support 
+URL shortener with analytics along with expiration support 
