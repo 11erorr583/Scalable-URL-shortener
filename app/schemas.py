@@ -38,6 +38,7 @@ class URLResponse(BaseModel):
         ..., description="The short code that will be the part of shortened url"
     )
     id: int = Field(..., description="This is the unique id for shortened URL")
+    short_url: str = Field(..., description=" final new short url generated")
 
 
 # step3: creating TrackingResponse schema
