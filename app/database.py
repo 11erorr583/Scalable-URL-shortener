@@ -11,8 +11,8 @@ DATABASE_URL = os.getenv(
 )  # from os standard library getenv() function gets the database url from .env
 # creating engine from sqlalchemy
 database_engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-sessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=database_engine)
-base = (
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=database_engine)
+Base = (
     declarative_base()
 )  # creates the base class for database and all modules inherit from it
 
