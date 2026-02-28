@@ -18,7 +18,7 @@ Base = (
 
 
 def get_db():
-    database = sessionLocal()
+    database = SessionLocal()
     try:
         yield database
     finally:
