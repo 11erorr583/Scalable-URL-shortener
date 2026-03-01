@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import URL
+from app.model import URL
 from app.schemas import URLCreate, URLResponse
 from app.utils.helpers import generate_short_code
 from fastapi.responses import RedirectResponse
@@ -26,7 +26,7 @@ def shorten_url(url_data: URLCreate, db: Session = Depends(get_db)):
     create_at = datetime.now()
     # creating object from URL model
     new_url = URL(
-        original_url=url_data.original_url,
+        original_url=str(url_data.original_url),
         short_code=code,
         expiry_date=url_data.expiry_date,
         created_at=create_at,
