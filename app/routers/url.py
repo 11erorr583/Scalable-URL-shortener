@@ -9,12 +9,17 @@ import os
 from datetime import datetime
 from fastapi import BackgroundTasks, Request
 from app.utils.helpers import save_tracking
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 router = APIRouter(tags=["URLS"])
 
+limit = Limiter(key_func=get_remote_address)
+
 
 @router.post("/shorten", status_code=201, response_model=URLResponse)
-def shorten_url(url_data: URLCreate, db: Session = Depends(get_db)):
+@limit.limit("10/minute")
+def shorten_url(request: Request, url_data: URLCreate, db: Session = Depends(get_db)):
     # \ check if the custom code already is in database
     if url_data.short_code:
         code = url_data.short_code
@@ -48,9 +53,10 @@ def shorten_url(url_data: URLCreate, db: Session = Depends(get_db)):
 
 # now writing the get requests
 @router.get("/{short_code}", tags=["redirect"])
+@limit.limit("10/minute")
 def redirect_to_url(
-    short_code: str,
     request: Request,
+    short_code: str,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
@@ -67,7 +73,8 @@ def redirect_to_url(
 
 # last part: delete record --> shortcut code
 @router.delete("/{short_code}", tags=["DELETE"])
-def delete_short_code(short_code: str, db: Session = Depends(get_db)):
+@limit.limit("10/minute")
+def delete_short_code(short_code: str, request: Request, db: Session = Depends(get_db)):
     # search for a short_code first
     check = db.query(URL).filter(URL.short_code == short_code).first()
     if not check:
