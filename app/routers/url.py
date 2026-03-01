@@ -7,6 +7,8 @@ from app.utils.helpers import generate_short_code
 from fastapi.responses import RedirectResponse
 import os
 from datetime import datetime
+from fastapi import BackgroundTasks, Request
+from app.utils.helpers import save_tracking
 
 router = APIRouter(tags=["URLS"])
 
@@ -46,7 +48,12 @@ def shorten_url(url_data: URLCreate, db: Session = Depends(get_db)):
 
 # now writing the get requests
 @router.get("/{short_code}", tags=["redirect"])
-def redirect_to_url(short_code: str, db: Session = Depends(get_db)):
+def redirect_to_url(
+    short_code: str,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     # check if short_code in database
     search_code = db.query(URL).filter(URL.short_code == short_code).first()
     if not search_code:
@@ -54,6 +61,7 @@ def redirect_to_url(short_code: str, db: Session = Depends(get_db)):
     elif search_code:
         if search_code.expiry_date and search_code.expiry_date < datetime.now():
             raise HTTPException(status_code=410, detail=" short url expired ")
+        background_tasks.add_task(save_tracking, search_code.id, request)
         return RedirectResponse(url=search_code.original_url, status_code=302)
 
 
