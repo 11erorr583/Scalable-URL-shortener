@@ -7,7 +7,7 @@ def test_create_short_url():
     response = client.post("/shorten", json={
         "original_url": "https://google.com",
     
-        "short_code": "test9991"
+        "short_code": "test999"
     })
     assert response.status_code == 400 #duplicate short code
 

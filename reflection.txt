@@ -1,0 +1,16 @@
+During this task, one of the most difficult bugs I encountered was related to mismatched datatypes between my model and schema. In the database I set the original_url field as Text but in schema I used HttpUrl to get input from user. When I tried to create a new URL
+entry using schema data, the application crashed with an internal error.
+
+To debug, I traced the erorr to the shorten_url() router in router.py. The issue was that HttpUrl type from pyndatic was not automatically working with Text field in SQLAlchemy database so, I explicitly convert the datatype of original_url to Text 
+
+"new_url = URL(
+        original_url=str(url_data.original_url),
+        short_code=code,
+        expiry_date=url_data.expiry_date,
+        created_at=create_at,
+    )
+"
+This gives the correct datatype to original_url in database and prevent the application to crash
+
+This debugging helps to understand that the data types are not compatible between SQLAlchemy and Paydentic 
+and the importance of datatype handling with care.
