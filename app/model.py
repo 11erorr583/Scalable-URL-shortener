@@ -23,6 +23,9 @@ class URL(Base):
     # creation_date
     created_at = Column(DateTime)
 
+    # short_url
+    short_url = Column(String, nullable=True)
+
     # relationship -- one to many
     tracking = relationship("Tracking", back_populates="url")
 

@@ -1,24 +1,29 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
+from datetime import datetime
+from dotenv import load_dotenv
+import os
+
 from app.database import get_db
 from app.model import URL
 from app.schemas import URLCreate, URLResponse
-from app.utils.helpers import generate_short_code
-from fastapi.responses import RedirectResponse
-import os
-from datetime import datetime
-from fastapi import BackgroundTasks, Request
-from app.utils.helpers import save_tracking
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from app.utils.helpers import generate_short_code, save_tracking
+from app.utils.limiter import limiter
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# loading one global BASE_URL from .enc
+load_dotenv()
+BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
 router = APIRouter(tags=["URLS"])
 
-limit = Limiter(key_func=get_remote_address)
-
 
 @router.post("/shorten", status_code=201, response_model=URLResponse)
-@limit.limit("10/minute")
+@limiter.limit("10/minute")
 def shorten_url(request: Request, url_data: URLCreate, db: Session = Depends(get_db)):
     # \ check if the custom code already is in database
     if url_data.short_code:
@@ -35,6 +40,7 @@ def shorten_url(request: Request, url_data: URLCreate, db: Session = Depends(get
     new_url = URL(
         original_url=str(url_data.original_url),
         short_code=code,
+        short_url=f"{BASE_URL}/{code}",
         expiry_date=url_data.expiry_date,
         created_at=create_at,
     )
@@ -45,15 +51,12 @@ def shorten_url(request: Request, url_data: URLCreate, db: Session = Depends(get
     db.refresh(new_url)
 
     # now build the full short url
-    BASE_URL = os.getenv("BASE_URL")
-    short_url = f"{BASE_URL}/{code}"
-    new_url.short_url = short_url
     return new_url
 
 
 # now writing the get requests
 @router.get("/{short_code}", tags=["redirect"])
-@limit.limit("10/minute")
+@limiter.limit("10/minute")
 def redirect_to_url(
     request: Request,
     short_code: str,
@@ -64,16 +67,20 @@ def redirect_to_url(
     search_code = db.query(URL).filter(URL.short_code == short_code).first()
     if not search_code:
         raise HTTPException(status_code=404, detail="page not found")
-    elif search_code:
-        if search_code.expiry_date and search_code.expiry_date < datetime.now():
-            raise HTTPException(status_code=410, detail=" short url expired ")
-        background_tasks.add_task(save_tracking, search_code.id, request)
-        return RedirectResponse(url=search_code.original_url, status_code=302)
+    if search_code.expiry_date and search_code.expiry_date < datetime.now():
+        raise HTTPException(status_code=410, detail=" short url expired ")
+
+    background_tasks.add_task(save_tracking, search_code.id, request)
+    response = RedirectResponse(url=search_code.original_url, status_code=302)
+    response.headers["Access-Control-Allow-Origin"] = (
+        "*"  # --> to solve CORS error I try to manually add CORS header for all origins
+    )
+    return response
 
 
 # last part: delete record --> shortcut code
 @router.delete("/{short_code}", tags=["DELETE"])
-@limit.limit("10/minute")
+@limiter.limit("10/minute")
 def delete_short_code(short_code: str, request: Request, db: Session = Depends(get_db)):
     # search for a short_code first
     check = db.query(URL).filter(URL.short_code == short_code).first()
