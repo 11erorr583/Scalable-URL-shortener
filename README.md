@@ -10,26 +10,31 @@
  - autogenerate short code if null, 
  - and optional expiry date
 
-# Installation: 
-**Clone the repository**
-git clone <https://github.com/11erorr583/Scalable-URL-shortener.git>
-**create the virtual enviournement**
-in root folder of prject type 
-venv/Scripts/activate
-**install dependies**
-install the requirements from requirements.txt
-pip install requirements.txt
-**set enviroment variables**
-save *.env.example* file as .env
-**enviroment variables are:**
-Example
-DATABASE_URL=sqlite:///./production.db
-BASE_URL=http://localhost:9000
-**Start the application**
-run command
-uvicorn app.main:app --reload
-this will start the server and you can open swaggerUI 
-in http://localhost:9000/docs 
+# Installation
+
+- **Clone the repository**  
+   `git clone https://github.com/11erorr583/Scalable-URL-shortener.git`
+
+- **Create the virtual environment**  
+  In the root folder of the project:  
+  `venv\Scripts\activate`  (Windows)  
+  or  
+  `source venv/bin/activate`  (Linux/Mac)
+
+- **Install dependencies**  
+  `pip install -r requirements.txt`
+
+- **Set environment variables**  
+  Save `.env.example` as `.env`  
+  Example:  
+     DATABASE_URL=sqlite:///./production.db
+     BASE_URL=http://localhost:9000
+  
+  
+- **Start the application**  
+`uvicorn app.main:app --reload`  
+This will start the server. Open Swagger UI at:  
+http://localhost:9000/docs
 
 # Syestem design choise:
 **High level architecture**
