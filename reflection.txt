@@ -14,3 +14,17 @@ This gives the correct datatype to original_url in database and prevent the appl
 
 This debugging helps to understand that the data types are not compatible between SQLAlchemy and Paydentic 
 and the importance of datatype handling with care.
+
+---------------------------------------------------------------------------------
+To resolve CORS error:
+fix: resolve CORS and rate limiter issues
+
+Created shared limiter.py to fix duplicate Limiter instance
+Added CORSMiddleware with allow_origins=['*']
+Added short_url column to URL model
+Fixed redirect response by manually adding CORS headers
+Moved BASE_URL to top level with load_dotenv()
+Cleaned up unused imports across all files"
+
+but still CORS error exists as:
+The CORS error on the redirect endpoint is not a server-side issue. My server correctly returns a 302 redirect with proper CORS headers. However, when the browser follows the redirect to an external domain like google.com, the browser enforces CORS on that external server — which I have no control over. This is standard browser Same Origin Policy behavior and is not fixable server-side. The endpoint works correctly when tested via the browser address bar or curl, which proves the server code is correct.
