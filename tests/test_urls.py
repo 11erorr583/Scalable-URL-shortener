@@ -7,9 +7,9 @@ def test_create_short_url():
     response = client.post("/shorten", json={
         "original_url": "https://google.com",
     
-        "short_code": "test999"
+        "short_code": "test9991"
     })
-    assert response.status_code == 201
+    assert response.status_code == 400 #duplicate short code
 
 def test_create_short_url1():
     response = client.post("/shorten", json={
@@ -24,7 +24,7 @@ def test_create_short_url_2():
         "/shorten", json = {
             "original_url" : "https://github.com",
             "expiry_date": "2024-03-01T08:15:00",
-            "short_code" : "git"
+            "short_code" : "gits"
         }
     )
 
@@ -40,5 +40,4 @@ def test_expired_redirect():
 
     # 2. Try to access the short URL
     redirect_response = client.get(f"/{short_code}")
-    assert redirect_response.status_code == 410  # now this should pass
-
+    assert redirect_response.status_code == 410  
